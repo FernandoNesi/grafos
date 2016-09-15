@@ -24,28 +24,73 @@ void libera_grafo(Grafo* g);
 int insere_aresta(Grafo* g, int orig, int dest);
 int remove_aresta(Grafo* g, int orig, int dest, int eh_digrafo);
 void buscaProfundidade_grafo(Grafo* g, int ini, int *visitado);
-void buscaProfundidade(Grafo* g, int ini, int *visitado, int cont);
+void buscaProfundidade(Grafo* g, int ini, int *visitado, int dist);
 
 int main(int argc, const char * argv[]) {
     // insert code here...
     printf("Hello, World!\n");
+    int NV;
     
     
+    Grafo *piramide;
+    piramide = cria_grafo(8, 8);
+    insere_aresta(piramide, 0, 1);
+    insere_aresta(piramide, 0, 3);
+    insere_aresta(piramide, 0, 4);
+    insere_aresta(piramide, 1, 2);
+    insere_aresta(piramide, 1, 5);
+    insere_aresta(piramide, 2, 3);
+    insere_aresta(piramide, 2, 6);
+    insere_aresta(piramide, 3, 7);
+    insere_aresta(piramide, 4, 5);
+    insere_aresta(piramide, 4, 7);
+    insere_aresta(piramide, 5, 6);
+    insere_aresta(piramide, 6, 7);
+    int visPiramide[8];
+    NV = 8;
     
-    Grafo *g;
-    g = cria_grafo(5, 5);
-    insere_aresta(g, 0, 1);
-    insere_aresta(g, 1, 2);
-    insere_aresta(g, 1, 3);
-    insere_aresta(g, 2, 4);
-    insere_aresta(g, 3, 0);
-    insere_aresta(g, 3, 4);
-    insere_aresta(g, 4, 1);
-    int vis[5];
+    buscaProfundidade_grafo(piramide, 0, visPiramide);
+    for (int i = 0; i < NV; i++){
+        printf("[%d]", visPiramide[i]);
+    }
+    printf(" - visitados\n\n");
+    for (int i = 0; i<NV; i++){
+        for (int ii = 0; ii < NV; ii++) {
+            if(visPiramide[ii]==i)
+                printf("%d: (nível %d)\n",ii, visPiramide[ii]);
+        }
+    }
+            
     
-    buscaProfundidade_grafo(g, 0, vis);
+    printf("\n\nARVORE\n\n");
+            
+    Grafo *arvore;
+    arvore = cria_grafo(8, 8);//(nro_vertices, grau_max)
+    insere_aresta(arvore, 0, 1);//1
+    insere_aresta(arvore, 0, 3);//2
+    insere_aresta(arvore, 0, 6);//3
+    insere_aresta(arvore, 1, 2);//4
+    insere_aresta(arvore, 3, 4);//5
+    insere_aresta(arvore, 4, 5);//6
+    insere_aresta(arvore, 6, 7);//7
+    int visArvore[8];
+    NV = 8;
     
-    libera_grafo(g);
+    buscaProfundidade_grafo(arvore, 0, visArvore);
+    
+    for (int i = 0; i < NV; i++){
+        printf("[%d]", visArvore[i]);
+    }
+    printf(" - visitados\n\n");
+    for (int i = 0; i<NV; i++){
+        for (int ii = 0; ii < NV; ii++) {
+            if(visArvore[ii]==i)
+                printf("%d: (nível %d)\n",ii, visArvore[ii]);
+        }
+    }
+    
+    libera_grafo(piramide);
+    libera_grafo(arvore);
     return 0;
 }
 
@@ -59,22 +104,21 @@ int main(int argc, const char * argv[]) {
  */
 
 void buscaProfundidade_grafo(Grafo* g, int ini, int *visitado){
-    int cont = 1;
+    int dist = 1;
     for (int i = 0; i < g->nro_vertices; i++) {
         visitado[i] = 0;
     }
-    buscaProfundidade(g, ini, visitado, cont);
+    buscaProfundidade(g, ini, visitado, dist);
 }
 
-void buscaProfundidade(Grafo* g, int ini, int *visitado, int cont){
-    visitado[ini] = cont;
+void buscaProfundidade(Grafo* g, int ini, int *visitado, int dist){
+    visitado[ini] = dist;
     printf("\n");
     for (int i = 0; i < g->grau[ini]; i++) {
         printf(" %d ", ini);
         if (!visitado[g->arestas[ini][i]]) {
-            buscaProfundidade(g, g->arestas[ini][i], visitado, cont+1);
+            buscaProfundidade(g, g->arestas[ini][i], visitado, dist+1);
         }
-        
     }
     printf("\n");
 }
@@ -110,8 +154,8 @@ int insere_aresta(Grafo* g, int orig, int dest){
     }if (dest < 0 || dest >= g->nro_vertices) {
         return 0;
     }
-    g->arestas[orig][g->grau[orig]] = dest;
-    g->grau[orig]++;
+    g->arestas[orig][g->grau[orig]++] = dest;
+    g->arestas[dest][g->grau[dest]++] = orig;
     
     return 1;
 }
@@ -139,3 +183,27 @@ void libera_grafo(Grafo* g){
         free(g);
     }
 }
+
+//cintura(Grafo G)
+//    cintura = INFINITO;
+//    para cada v em V(G) faça:
+//        dist[v] = -1;
+//    para cada v em V(G) faça:
+//        se dist[v] == -1 faça:
+//            pai[v] = v;
+//            dist[v] = 0;
+//            DFS(G, v)
+//
+//
+//DFS(Grafo G, Vertive v)
+//    para cada w vizinho de v faça:
+//        se dist[w] == -1 faça:
+//            pai[w] = v;
+//            dist[w] = dist[v] + 1;
+//            DFS(G, v)
+//        senão
+//            se w != pai[v] && cintura > (dist[v] - dist[w] + 1) faça:
+//                cintura = (dist[v] - dist[w] + 1)
+
+
+
